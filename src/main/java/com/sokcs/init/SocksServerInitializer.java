@@ -1,6 +1,6 @@
 package com.sokcs.init;
 
-import com.sokcs.handler.SocksServerHandler;
+import com.sokcs.handler.socks.SocksServerHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.socksx.SocksPortUnificationServerHandler;

@@ -1,4 +1,4 @@
-package com.sokcs.handler;
+package com.sokcs.handler.socks;
 
 import com.sokcs.utils.SocksServerUtils;
 import io.netty.bootstrap.Bootstrap;

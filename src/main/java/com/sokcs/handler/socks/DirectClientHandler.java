@@ -1,4 +1,4 @@
-package com.sokcs.handler;
+package com.sokcs.handler.socks;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;

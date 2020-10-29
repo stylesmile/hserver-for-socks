@@ -1,4 +1,4 @@
-package com.sokcs.handler;
+package com.sokcs.handler.socks;
 
 import com.sokcs.utils.SocksServerUtils;
 import io.netty.channel.ChannelHandler;
@@ -7,22 +7,17 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.socksx.SocksMessage;
 import io.netty.handler.codec.socksx.v4.Socks4CommandRequest;
 import io.netty.handler.codec.socksx.v4.Socks4CommandType;
-import io.netty.handler.codec.socksx.v5.DefaultSocks5InitialResponse;
-import io.netty.handler.codec.socksx.v5.DefaultSocks5PasswordAuthResponse;
-import io.netty.handler.codec.socksx.v5.Socks5AuthMethod;
-import io.netty.handler.codec.socksx.v5.Socks5InitialRequest;
-import io.netty.handler.codec.socksx.v5.Socks5CommandRequest;
-import io.netty.handler.codec.socksx.v5.Socks5CommandRequestDecoder;
-import io.netty.handler.codec.socksx.v5.Socks5CommandType;
-import io.netty.handler.codec.socksx.v5.Socks5PasswordAuthRequest;
-import io.netty.handler.codec.socksx.v5.Socks5PasswordAuthStatus;
+import io.netty.handler.codec.socksx.v5.*;
 
 @ChannelHandler.Sharable
 public final class SocksServerHandler extends SimpleChannelInboundHandler<SocksMessage> {
 
     public static final SocksServerHandler INSTANCE = new SocksServerHandler();
 
-    private SocksServerHandler() { }
+    private static final boolean flag = true;
+
+    private SocksServerHandler() {
+    }
 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, SocksMessage socksRequest) throws Exception {
@@ -39,14 +34,30 @@ public final class SocksServerHandler extends SimpleChannelInboundHandler<SocksM
                 break;
             case SOCKS5:
                 if (socksRequest instanceof Socks5InitialRequest) {
-                    // auth support example
-                    //ctx.pipeline().addFirst(new Socks5PasswordAuthRequestDecoder());
-                    //ctx.write(new DefaultSocks5AuthMethodResponse(Socks5AuthMethod.PASSWORD));
-                    ctx.pipeline().addFirst(new Socks5CommandRequestDecoder());
-                    ctx.write(new DefaultSocks5InitialResponse(Socks5AuthMethod.NO_AUTH));
+                    if (flag) {
+                        ctx.pipeline().addFirst(new Socks5PasswordAuthRequestDecoder());
+                        ctx.writeAndFlush(new DefaultSocks5InitialResponse(Socks5AuthMethod.PASSWORD));
+                    } else {
+                        ctx.pipeline().addFirst(new Socks5CommandRequestDecoder());
+                        ctx.writeAndFlush(new DefaultSocks5InitialResponse(Socks5AuthMethod.NO_AUTH));
+                    }
+
                 } else if (socksRequest instanceof Socks5PasswordAuthRequest) {
-                    ctx.pipeline().addFirst(new Socks5CommandRequestDecoder());
-                    ctx.write(new DefaultSocks5PasswordAuthResponse(Socks5PasswordAuthStatus.SUCCESS));
+                    if (flag) {
+                        Socks5PasswordAuthRequest passwordAuthRequest = (Socks5PasswordAuthRequest) socksRequest;
+                        if (passwordAuthRequest.username().equals("aa") &&
+                                passwordAuthRequest.password().equals("aa")) {
+                            ctx.pipeline().addFirst( new Socks5CommandRequestDecoder());
+
+                            ctx.write(new DefaultSocks5PasswordAuthResponse(Socks5PasswordAuthStatus.SUCCESS));
+                        } else {
+                            ctx.write(new DefaultSocks5PasswordAuthResponse(Socks5PasswordAuthStatus.FAILURE));
+                            SocksServerUtils.closeOnFlush(ctx.channel());
+                        }
+                    } else {
+                        ctx.pipeline().addFirst(new Socks5CommandRequestDecoder());
+                        ctx.write(new DefaultSocks5PasswordAuthResponse(Socks5PasswordAuthStatus.SUCCESS));
+                    }
                 } else if (socksRequest instanceof Socks5CommandRequest) {
                     Socks5CommandRequest socks5CmdRequest = (Socks5CommandRequest) socksRequest;
                     if (socks5CmdRequest.type() == Socks5CommandType.CONNECT) {
@@ -60,7 +71,7 @@ public final class SocksServerHandler extends SimpleChannelInboundHandler<SocksM
                     ctx.close();
                 }
                 break;
-            case UNKNOWN:
+            default:
                 ctx.close();
                 break;
         }
