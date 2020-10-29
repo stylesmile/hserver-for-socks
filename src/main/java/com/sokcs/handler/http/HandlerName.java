@@ -9,4 +9,6 @@ public final class HandlerName {
 
     // new HttpObjectAggregator(1024 * 1024)
     public static final String HTTP_OBJECT_AGGREGATOR = "httpObjectAggregator";
+
+    public static final String HTTP_AUTH = "httpAuth";
 }

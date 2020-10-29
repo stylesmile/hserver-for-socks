@@ -7,17 +7,23 @@ import com.sokcs.utils.MsgUtils;
 import com.sokcs.utils.ReleaseUtils;
 import com.sokcs.utils.ThrowableUtils;
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import lombok.extern.slf4j.Slf4j;
+import top.hserver.core.server.context.Request;
+import top.hserver.core.server.handlers.BuildResponse;
 
 import javax.net.ssl.SSLException;
-import java.util.NoSuchElementException;
-import java.util.Objects;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.function.Consumer;
 
 
@@ -53,13 +59,12 @@ public class HttpHandler extends SimpleChannelInboundHandler<HttpObject> {
         ctx.close();
     }
 
+
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, HttpObject msg) throws Exception {
         if (msg instanceof FullHttpRequest) {
             FullHttpRequest fullHttpRequest = (FullHttpRequest) msg;
-
             int port = 80;
-
             String[] hostSplit = fullHttpRequest.headers().get(HttpHeaderNames.HOST).split(":");
             String host = hostSplit[0];
             if (hostSplit.length > 1) {

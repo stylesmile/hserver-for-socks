@@ -1,7 +1,10 @@
 package com.sokcs.init;
 
+import com.sokcs.certificate.CertificateImpl;
+import com.sokcs.certificate.CertificatePool;
 import com.sokcs.handler.http.HandlerName;
 import com.sokcs.handler.http.HttpHandler;
+import com.sokcs.handler.http.HttpProxyAuthorizationHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -29,8 +32,6 @@ public class StartSocksServer implements InitRunner {
     public void init(String[] strings) {
         startSocksProxy();
         startHttpSocks();
-        System.out.println(1111111111);
-
     }
 
 
@@ -66,7 +67,6 @@ public class StartSocksServer implements InitRunner {
             public void run() {
                 EventLoopGroup bossGroup = new NioEventLoopGroup();
                 EventLoopGroup workerGroup = new NioEventLoopGroup();
-
                 try {
                     ServerBootstrap serverBootstrap = new ServerBootstrap();
                     serverBootstrap.group(bossGroup, workerGroup)
@@ -78,7 +78,8 @@ public class StartSocksServer implements InitRunner {
 
                                     channelPipeline.addLast(HandlerName.HTTP_SERVER_CODEC, new HttpServerCodec());
                                     channelPipeline.addLast(HandlerName.HTTP_OBJECT_AGGREGATOR, new HttpObjectAggregator(1024 * 1024 * 512));
-                                    channelPipeline.addLast(HandlerName.HTTP_HANDLER, new HttpHandler(null, null, null));
+                                    channelPipeline.addLast(HandlerName.HTTP_AUTH, new HttpProxyAuthorizationHandler());
+                                    channelPipeline.addLast(HandlerName.HTTP_HANDLER, new HttpHandler(null,null,null));
                                 }
                             });
                     ChannelFuture channelFuture = serverBootstrap.bind(HTTP_PORT).sync();
