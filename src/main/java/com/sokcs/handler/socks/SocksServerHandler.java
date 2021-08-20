@@ -14,7 +14,7 @@ public final class SocksServerHandler extends SimpleChannelInboundHandler<SocksM
 
     public static final SocksServerHandler INSTANCE = new SocksServerHandler();
 
-    private static final boolean flag = true;
+    private static final boolean flag = false;
 
     private SocksServerHandler() {
     }
